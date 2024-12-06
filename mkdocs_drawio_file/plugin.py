@@ -14,10 +14,7 @@ from mkdocs.plugins import BasePlugin
 # ------------------------
 RE_PATTERN = r'!\[(.*?)\]\((.*?.drawio)\)'
 SUB_TEMPLATE = string.Template(
-    "<div class=\"mxgraph\" style=\"max-width:100%;border:1px solid transparent;\" "
-    "data-mxgraph=\"{&quot;highlight&quot;:&quot;#0000ff&quot;,&quot;nav&quot;:true,&quot;resize&quot;:true,"
-    "&quot;toolbar&quot;:&quot;zoom layers tags lightbox&quot;,&quot;edit&quot;:&quot;_blank&quot;,&quot;xml&quot;:&quot;$xml_drawio&quot;}\"></div>"
-)
+        "<div class=\"mxgraph\" style=\"max-width:100%;border:1px solid transparent;\" data-mxgraph=\"{&quot;highlight&quot;:&quot;#0000ff&quot;,&quot;nav&quot;:true,&quot;resize&quot;:true,&quot;toolbar&quot;:&quot;zoom layers tags lightbox&quot;,&quot;edit&quot;:&quot;_blank&quot;,&quot;xml&quot;:&quot;$xml_drawio&quot;}\"></div>")
 
 # ------------------------
 # Plugin
@@ -39,12 +36,12 @@ class DrawioFilePlugin(BasePlugin):
 
     def on_post_page(self, output_content, config, page, **kwargs):
         if ".drawio" not in output_content.lower():
-            # Skip unnecessary HTML parsing
+            # Skip unecessary HTML parsing
             return output_content
 
         soup = BeautifulSoup(output_content, 'html.parser')
 
-        # Search for images using .drawio extension
+        # search for images using drawio extension
         diagrams = soup.findAll('img', src=re.compile(r'.*\.drawio', re.IGNORECASE))
         if len(diagrams) == 0:
             return output_content
@@ -57,15 +54,15 @@ class DrawioFilePlugin(BasePlugin):
         else:
             print(f"Failed to fetch JS file: {response.status_code}")
             js_content = ""
+        # add drawio library to body
 
-        # Add DrawIO library to body
         lib = soup.new_tag('script')
         lib.string = js_content
 
-        # Add the script tag to the <body> section
+        # Step 5: Add the script tag to the <body> section or <head> (based on your preference)
         soup.body.append(lib)
 
-        # Substitute images with embedded DrawIO diagram
+        # substitute images with embedded drawio diagram
         path = os.path.dirname(page.file.abs_src_path)
 
         for diagram in diagrams:
@@ -84,13 +81,13 @@ class DrawioFilePlugin(BasePlugin):
         return SUB_TEMPLATE.substitute(xml_drawio=escaped_xml)
     
     def parse_diagram(self, data, alt):
-        if alt is None:
+        if alt == None:
             return etree.tostring(data, encoding=str)
 
         mxfile = data.xpath("//mxfile")[0]
 
         try:
-            # Try to parse for a specific page by using the alt attribute
+            # try to parse for a specific page by using the alt attribute
             page = mxfile.xpath(f"//diagram[@name='{alt}']")
 
             if len(page) == 1:
@@ -101,7 +98,16 @@ class DrawioFilePlugin(BasePlugin):
                 return etree.tostring(result, encoding=str)
             else:
                 print(f"Warning: Found {len(page)} results for page name '{alt}'")
-        except Exception as e:
+        except e:
             print(f"Error: Could not properly parse page name: '{alt}'")
+        
+        return etree.tostring(mxfile, encoding=str)
 
-        return etree.tostring(mxf
+    def escape_diagram(self, str_xml: str):
+        str_xml = str_xml.replace("&", "&amp;")
+        str_xml = str_xml.replace("<", "&lt;")
+        str_xml = str_xml.replace(">", "&gt;")
+        str_xml = str_xml.replace("\"", "\&quot;")
+        str_xml = str_xml.replace("'", "&apos;")
+        str_xml = str_xml.replace("\n", "")
+        return str_xml
