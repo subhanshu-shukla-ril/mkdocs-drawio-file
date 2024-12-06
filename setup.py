@@ -21,6 +21,10 @@ setup(
     install_requires=["mkdocs","beautifulsoup4","lxml"],
     entry_points={"mkdocs.plugins": [
         "drawio_file = mkdocs_drawio_file:DrawioFilePlugin",]},
+      package_data={
+        'mkdocs_drawio_file': ['static/*.js'],
+    },
+    include_package_data=True,
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         "License :: OSI Approved :: MIT License",
