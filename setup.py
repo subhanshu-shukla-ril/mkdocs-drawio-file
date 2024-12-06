@@ -18,7 +18,7 @@ setup(
     description="MkDocs plugin to embed drawio files",
     long_description=read("README.md"),
     long_description_content_type="text/markdown",
-    install_requires=["mkdocs","beautifulsoup4","lxml"],
+    install_requires=["mkdocs","beautifulsoup4","lxml","requests"],
     entry_points={"mkdocs.plugins": [
         "drawio_file = mkdocs_drawio_file:DrawioFilePlugin",]},
       package_data={
