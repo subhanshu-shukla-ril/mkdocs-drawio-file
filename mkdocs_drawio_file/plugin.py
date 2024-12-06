@@ -6,7 +6,7 @@ import mkdocs
 from lxml import etree
 from bs4 import BeautifulSoup
 from mkdocs.plugins import BasePlugin
-from pkg_resources import resource_filename
+from mkdocs.structure.files import File
 
 class DrawioFilePlugin(BasePlugin):
     """
@@ -25,14 +25,20 @@ class DrawioFilePlugin(BasePlugin):
         """
         Get the path to the local Diagrams.net viewer script
         
-        This method will:
-        1. Check if the script is bundled with the package
-        2. Create the script file if it doesn't exist
-        3. Return the path to the script
+        Creates a static directory and viewer script if not exists
         """
-        # Viewer script content (minimized version of viewer-static.min.js)
+        # Determine the package directory
+        package_dir = os.path.dirname(__file__)
+        
+        # Create a 'static' subdirectory if it doesn't exist
+        static_dir = os.path.join(package_dir, 'static')
+        os.makedirs(static_dir, exist_ok=True)
+        
+        # Path for the viewer script
+        viewer_script_path = os.path.join(static_dir, 'viewer-static.min.js')
+        
+        # Viewer script content (minimized version)
         viewer_script_content = """
-        // Minimized Diagrams.net Viewer Script
         (function(){
             var mxIsElectron=window.navigator&&window.navigator.userAgent.indexOf('Electron')>=0;
             
@@ -63,7 +69,6 @@ class DrawioFilePlugin(BasePlugin):
                 }
             };
 
-            // Embed all diagrams on page load
             if(document.readyState==='loading'){
                 document.addEventListener('DOMContentLoaded',function(){
                     var containers=document.getElementsByClassName('mxgraph');
@@ -80,22 +85,34 @@ class DrawioFilePlugin(BasePlugin):
         })();
         """
         
-        # Determine the package directory
-        package_dir = os.path.dirname(__file__)
-        
-        # Create a 'static' subdirectory if it doesn't exist
-        static_dir = os.path.join(package_dir, 'static')
-        os.makedirs(static_dir, exist_ok=True)
-        
-        # Path for the viewer script
-        viewer_script_path = os.path.join(static_dir, 'viewer-static.min.js')
-        
         # Write the script if it doesn't exist
         if not os.path.exists(viewer_script_path):
             with open(viewer_script_path, 'w', encoding='utf-8') as f:
                 f.write(viewer_script_content)
         
         return viewer_script_path
+
+    def on_files(self, files, config):
+        """
+        Copy the viewer script to the site's static directory
+        
+        Compatible with latest MkDocs API
+        """
+        # Determine the destination path for the viewer script
+        dest_path = os.path.join('static', os.path.basename(self.viewer_script_path))
+        
+        # Create a new File object 
+        viewer_file = File(
+            src_path=self.viewer_script_path,
+            dest_path=dest_path,
+            base_path=config['site_dir'],
+            use_directory_urls=config['use_directory_urls']
+        )
+        
+        # Add the file to the files collection
+        files.append(viewer_file)
+        
+        return files
 
     def on_post_page(self, output_content, config, page, **kwargs):
         """
@@ -134,12 +151,8 @@ class DrawioFilePlugin(BasePlugin):
         """
         Get the relative path to the viewer script
         """
-        # Calculate the relative path from the current page to the viewer script
-        current_page_dir = os.path.dirname(page.file.dest_path)
-        viewer_filename = os.path.basename(self.viewer_script_path)
-        
         # For MkDocs, typically use a path in the site root
-        return os.path.join('static', viewer_filename)
+        return os.path.join('static', os.path.basename(self.viewer_script_path))
 
     def substitute_image(self, path: str, src: str, alt: str = None):
         """
@@ -217,17 +230,3 @@ class DrawioFilePlugin(BasePlugin):
             "'": '&apos;'
         }
         return ''.join(escape_map.get(char, char) for char in str_xml).replace('\n', '')
-
-    def on_files(self, files, config):
-        """
-        Copy the viewer script to the site's static directory
-        """
-        files.files.append(
-            mkdocs.structure.files.File(
-                src_path=self.viewer_script_path,
-                dest_path=os.path.join('static', os.path.basename(self.viewer_script_path)),
-                base_path=config['site_dir'],
-                use_directory_urls=config['use_directory_urls']
-            )
-        )
-        return files
