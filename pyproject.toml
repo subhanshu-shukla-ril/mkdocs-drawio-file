@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "mkdocs-drawio-file-local"
-version = "1.0.0"
+version = "2.0.0"
 description = "Mkdocs plugin that renders .drawio files"
 authors = ["Subhanshu shukla <shubhanshu.shukla@gmail.com>"]
 license = "MIT"
