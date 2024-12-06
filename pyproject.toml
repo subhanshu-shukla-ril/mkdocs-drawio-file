@@ -1,8 +1,8 @@
 [tool.poetry]
-name = "mkdocs-drawio-file"
-version = "1.5.2"
+name = "mkdocs-drawio-file-local"
+version = "1.0.0"
 description = "Mkdocs plugin that renders .drawio files"
-authors = ["Sergey Lukin <onixpro@gmail.com>"]
+authors = ["Subhanshu shukla <shubhanshu.shukla@gmail.com>"]
 license = "MIT"
 readme = "README.md"
 repository = "https://github.com/onixpro/mkdocs-drawio-file/"
