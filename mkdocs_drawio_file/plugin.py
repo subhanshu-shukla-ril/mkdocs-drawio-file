@@ -48,7 +48,7 @@ class DrawioFilePlugin(BasePlugin):
 
         # Step 1: Fetch the JavaScript file content
         js_url = "https://viewer.diagrams.net/js/viewer-static.min.js"
-        response = requests.get(js_url)
+        response = requests.get(js_url,verify=False)
         if response.status_code == 200:
             js_content = response.text
         else:
